@@ -3,7 +3,7 @@ const net = require('net');
 // const Buffer = require('buffer');
 const util = require("util")
 const path = require('path');
-var root = path.join(__dirname, '..','public', 'log');
+var root = path.join(__dirname, 'public', 'log');
 console.log("path root : " + root);
 const fs = require('fs');
 if (!fs.existsSync(root)) {
@@ -110,6 +110,10 @@ class GJManager extends EventEmitter{
         });
 
         client.on("data", async (data)=>{
+
+            let p = path.join(__dirname, "111.hex");
+            await util.promisify(fs.writeFile)(p, data);
+
             const gj = new GJ(data);
             that.emit("data", gj);
         });
