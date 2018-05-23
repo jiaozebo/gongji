@@ -12,7 +12,7 @@ if (!fs.existsSync(root)) {
     fs.mkdir(root, function () { });
 }
 if (process.env.NODE_ENV == 'development'){var logger = plug('logger');}else{var logger = plug('logger');}
-
+logger.setKey("gj");
 const EventEmitter = require('events');
 
 
@@ -126,16 +126,16 @@ class GJManager extends EventEmitter{
         let buffer = Buffer.alloc(0);
         client.on("data", async (data)=>{
             if (buffer.length != 0){
-                logger.warn("拼包");
+                // logger.warn("拼包");
                 data = Buffer.concat([buffer, data]);
                 buffer = Buffer.alloc(0);
             }
             let header = new GJHeader(data);
             if (data.length >= header.bodyLen + 32){
                 // 收到了完整的一包.
-                logger.info(`收到了完整的一包,数据长度:${data.length}, 包体长度:${header.bodyLen}`);
+                // logger.info(`收到了完整的一包,数据长度:${data.length}, 包体长度:${header.bodyLen}`);
                 if (data.length > header.bodyLen + 32){ // 收到的包里面,含有下一个数据包.
-                    logger.warn(`收到的数据含有多个数据包.需要进行分包处理.`);
+                    // logger.warn(`收到的数据含有多个数据包.需要进行分包处理.`);
                 }
                 let buffer1 = data.slice(0, 32+header.bodyLen);
                 const gj = new GJ(buffer1);
@@ -143,7 +143,7 @@ class GJManager extends EventEmitter{
 
                 buffer = data.slice(32+ header.bodyLen);
             }else{
-                logger.info(`收到了一个数据体,但是未包含一个完整数据包.`)
+                // logger.info(`收到了一个数据体,但是未包含一个完整数据包.`)
                 buffer = data;
             }
         });

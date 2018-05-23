@@ -18,7 +18,7 @@ if (!fs.existsSync(root)) {
 }
 let logger = null;
 if (process.env.NODE_ENV == 'development'){ logger = plug('logger');}else{ logger = plug('logger');}
-
+logger.setKey("app");
 /**
  *  报警下限	恢复下限	恢复上限	报警上限    是否已报警.
  */
@@ -101,7 +101,7 @@ gjManager.on('data', async (data)=>{
             value.puid = row.puid;
             stmtInsert.run(value.key, value.value, moment().format("YYYY-MM-DD HH:MM:SS"));
             // key_value[k] = value.value;
-            logger.debug(`find ${value.value} of ${value.key}`);
+            logger.debug(`KEY: ${value.key} VALUE: ${value.value}`);
             // 
 
             if (value.key.endsWith('-NA')){ // name
