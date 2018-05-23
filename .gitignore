@@ -5,3 +5,5 @@
 /public/log/*
 
 /TSW-master/node_modules/
+
+/TSW-master/examples/framework/public/*.json
