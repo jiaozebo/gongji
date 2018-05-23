@@ -17,7 +17,7 @@ if (!fs.existsSync(root)) {
     fs.mkdir(root, function () { });
 }
 let logger = null;
-if (process.env.NODE_ENV == 'development'){ logger = plug('logger');}else{ logger = plug('logger').dailyfile({root: root, maxLogFiles: 10});}
+if (process.env.NODE_ENV == 'development'){ logger = plug('logger');}else{ logger = plug('logger');}
 
 /**
  *  报警下限	恢复下限	恢复上限	报警上限    是否已报警.
