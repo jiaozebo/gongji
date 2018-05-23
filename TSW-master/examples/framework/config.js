@@ -4,7 +4,7 @@
 this.httpAddress = '0.0.0.0';
 
 //http监听地址
-this.httpPort = 80;
+this.httpPort = 3000;
 
 //路由
 this.router = require('./router.js');
