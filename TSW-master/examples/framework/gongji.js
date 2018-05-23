@@ -2,6 +2,8 @@ const net = require('net');
 // var Iconv = require('iconv').Iconv;
 // const Buffer = require('buffer');
 const util = require("util")
+const iconv = require('iconv-lite');
+ 
 const path = require('path');
 var root = path.join(__dirname, 'public', 'log');
 console.log("path root : " + root);
@@ -45,8 +47,14 @@ class GJUnit{
     // 站点名称|事件来源|事件内容|事件级别|事件类型|发生时间|事件ID（即event_guid）|
     constructor(content){
         const firstDivider = content.indexOf("|");
-        this.key = content.substring(0, firstDivider);
-        this.value = content.substring(firstDivider + 1);
+
+        this.key = iconv.decode(content.slice(0, firstDivider), 'gbk');
+        this.value = iconv.decode(content.slice(firstDivider + 1), 'gbk');
+        // this.key = content.toString("gbk", 0, firstDivider);
+        // this.value = content.toString("gbk", firstDivider + 1);
+        
+
+        // this.key = content.substring(0, firstDivider);        
         // const arr = content.split("|");
         // this.站点名称 = arr[0]
         // this.事件来源 = arr[1]
@@ -65,8 +73,10 @@ class GJBody{
         // buffer = iconv.convert(buffer);
         while(buffer.length != 0){
             let unitLen = buffer.readInt16LE(0); 
-            let unitStr = buffer.toString('utf8', 2, unitLen + 2);
-            let unit = new GJUnit(unitStr);
+            // let unitStr = buffer.toString('utf8', 2, unitLen + 2);
+            // let unit = new GJUnit(unitStr);
+            let unitBuf = buffer.slice(2, 2+ unitLen);
+            let unit = new GJUnit(unitBuf);
             
             this.units.push(unit);
             buffer = buffer.slice(2+unitLen);
@@ -109,17 +119,33 @@ class GJManager extends EventEmitter{
 
         });
 
+        let buffer = Buffer.alloc(0);
         client.on("data", async (data)=>{
+            if (buffer.length != 0){
+                logger.warn("拼包");
+                data = Buffer.concat([buffer, data]);
+                buffer = Buffer.alloc(0);
+            }
+            let header = new GJHeader(data);
+            if (data.length >= header.bodyLen + 32){
+                // 收到了完整的一包.
+                logger.info(`收到了完整的一包,数据长度:${data.length}, 包体长度:${header.bodyLen}`);
+                if (data.length > header.bodyLen + 32){ // 收到的包里面,含有下一个数据包.
+                    logger.warn(`收到的数据含有多个数据包.需要进行分包处理.`);
+                }
+                let buffer1 = data.slice(0, 32+header.bodyLen);
+                const gj = new GJ(buffer1);
+                that.emit("data", gj);
 
-            let p = path.join(__dirname, "111.hex");
-            await util.promisify(fs.writeFile)(p, data);
-
-            const gj = new GJ(data);
-            that.emit("data", gj);
+                buffer = data.slice(32+ header.bodyLen);
+            }else{
+                logger.info(`收到了一个数据体,但是未包含一个完整数据包.`)
+                buffer = data;
+            }
         });
 
         this.client = client;
     }
 }
 
-module.exports = GJManager
+module.exports = {GJManager:GJManager, GJ:GJ,GJHeader:GJHeader}

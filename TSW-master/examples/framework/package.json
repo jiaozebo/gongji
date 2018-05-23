@@ -1,0 +1,9 @@
+{
+  "version": "0.0.1",
+  "dependencies": {
+    "express": "*"
+  },
+  "engines": {
+    "node": ">= 8.0.0"
+  }
+}
