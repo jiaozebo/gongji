@@ -17,7 +17,7 @@ if (!fs.existsSync(root)) {
     fs.mkdir(root, function () { });
 }
 let logger = null;
-if (process.env.NODE_ENV == 'development'){ logger = require('tracer').colorConsole();}else{ logger = require('tracer').dailyfile({root: root, maxLogFiles: 10});}
+if (process.env.NODE_ENV == 'development'){ logger = plug('logger');}else{ logger = plug('logger').dailyfile({root: root, maxLogFiles: 10});}
 
  
 
@@ -48,9 +48,7 @@ const name_map = {};
 
 gjManager.on('data', async (data)=>{
     let units = data.body.units;
-    logger.info("recv gj data%j", data);
-
-
+    
     const stmt = db.prepare('SELECT * FROM key2puid');
     const rows = stmt.all();
     var stmtInsert = db.prepare('INSERT INTO key2value VALUES(?,?,?)');
@@ -69,7 +67,7 @@ gjManager.on('data', async (data)=>{
             value.puid = row.puid;
             stmtInsert.run(value.key, value.value, moment().format("YYYY-MM-DD HH:MM:SS"));
             // key_value[k] = value.value;
-            logger.info("find value :%s of key: %s", value.value, value.key);
+            logger.debug(`find ${value.value} of ${value.key}`);
             // 
 
             if (value.key.endsWith('-NA')){ // name
@@ -113,6 +111,10 @@ setTimeout(async () => {
             }
             let buffer1 = data.slice(0, 32+header.bodyLen);
             const gj = new GJ(buffer1);
+            
+
+            await util.promisify(fs.writeFile)(path.join(__dirname, 'public', moment().format('x') + ".json"),JSON.stringify(gj.body), {});
+
             gjManager.emit("data", gj);
 
             buffer = data.slice(32+ header.bodyLen);
