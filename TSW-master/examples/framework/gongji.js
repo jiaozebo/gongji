@@ -11,7 +11,7 @@ const fs = require('fs');
 if (!fs.existsSync(root)) {
     fs.mkdir(root, function () { });
 }
-if (process.env.NODE_ENV == 'development'){var logger = require('tracer').colorConsole();}else{var logger = require('tracer').dailyfile({root: root, maxLogFiles: 10});}
+if (process.env.NODE_ENV == 'development'){var logger = plug('logger');}else{var logger = plug('logger');}
 
 const EventEmitter = require('events');
 
@@ -50,6 +50,10 @@ class GJUnit{
 
         this.key = iconv.decode(content.slice(0, firstDivider), 'gbk');
         this.value = iconv.decode(content.slice(firstDivider + 1), 'gbk');
+
+        if (this.value.indexOf("报警") != -1){
+            logger.warn(`有报警可能....${this.key}:${this.value}`);
+        }
         // this.key = content.toString("gbk", 0, firstDivider);
         // this.value = content.toString("gbk", firstDivider + 1);
         
