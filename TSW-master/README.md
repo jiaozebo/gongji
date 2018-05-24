@@ -1,7 +1,7 @@
 # [Tencent Server Web](https://tswjs.org)
 
 
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](./LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/TSW/pulls) [![wiki](https://img.shields.io/badge/Wiki-open-brightgreen.svg)](https://tswjs.org/guide/index) ![node](https://img.shields.io/badge/node-%3E%3D8.0.0-green.svg)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](./LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/Tencent/TSW/pulls) [![wiki](https://img.shields.io/badge/Wiki-open-brightgreen.svg)](https://tswjs.org/guide/index) ![node](https://img.shields.io/badge/node-%3E%3D8.0.0-green.svg) [![Build Status](https://travis-ci.org/Tencent/TSW.svg?branch=master)](https://travis-ci.org/Tencent/TSW)
 
 ---
 
@@ -13,23 +13,23 @@
 
 Tencent Server Web(TSW)，是一套面向WEB前端开发者，以提升问题定位效率为初衷，提供染色抓包、全息日志和异常发现的Node.js基础设施。TSW关注业务的运维监控能力，适用于http、websocket协议的业务场景，可无缝与即有项目进行整合。支持公有云、私有云和本地部署。
 
-![tsw](./structure.png)
+![tsw](./static/resource/structure.png)
 
 #### 染色抓包
 
-TSW 支持用户纬度的抓包
+TSW 支持用户维度的抓包
 
-- 对于染色的用户
-- 对请求生命周期内的抓包进行收集
+- 对于指定的用户（白名单内）
+- 请求生命周期内，对请求本身及衍生请求进行抓包
 - 提供抓包查看、下载等功能
 - 抓包格式支持Fiddler和Charles，以及HAR
 
 #### 全息日志
 
-TSW 提供用户纬度的全息日志帮助开发者快速定位问题
+TSW 提供用户维度的全息日志帮助开发者快速定位问题
 
 - 对请求生命周期内的日志，采用全息的方式记录，形成流水
-- 流水按用户纬度聚合
+- 流水按用户维度聚合
 - 提供查看功能，快速定位问题原因
 
 #### 异常发现
@@ -44,8 +44,10 @@ TSW 提供用户纬度的全息日志帮助开发者快速定位问题
 
 ## 开始
 
-1. 请先下载安装[Node.js](https://nodejs.org/en/download/)，并且Node.js的版本需不低于8.0.0。
+1. 需先安装[Node.js](https://nodejs.org/en/download/)，并且Node.js的版本需不低于8.0.0。
 1. 安装 -- `git clone https://github.com/Tencent/TSW.git`
+1. 切换工作目录 -- `cd TSW`
+1. 补全依赖 -- `npm install --no-optional`
 1. 配置 -- 修改 `TSW/conf/config.js`，更多配置项参考 [手册](https://tswjs.org/doc/api/config) 
 
     ```js
@@ -54,8 +56,8 @@ TSW 提供用户纬度的全息日志帮助开发者快速定位问题
     this.httpPort = 80;
     ```
 
-1. 启动 --  ``node TSW``
-1. 预览 -- 打开浏览器，访问 ``http://127.0.0.1/`` 即可
+1. 启动 --  `node index.js`
+1. 预览 -- 打开浏览器，访问 `http://127.0.0.1/` 即可
 
 ## 官方网站
 
