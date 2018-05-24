@@ -124,7 +124,9 @@ gjManager.on('data', async (data)=>{
             const realValue = parseFloat(value.value);
             const isWendu = value_key_pre.endsWith("-A1");
             const alert_item = alert_table[value_key_pre];
+            
             if (alert_item){
+
                 if (realValue >= alert_item[3]){    // 上限报警!
                     alert_item[4] = 2;
                     gjManager.emit("alert", {type:"超出预警值报警", key:value_key_pre, key_type:isWendu?1:2, value:realValue, alertValue:alert_item[3], recoverValue:alert_item[2], puid:value.puid});
@@ -206,7 +208,16 @@ gjManager.on('alert', async (value)=>{
     value.alert = 1;
 	clients.forEach(async (ws)=>{
 		ws.send(JSON.stringify(value));
-	});
+    });
+    
+    // sms alert...
+    const stmt = db.prepare("SELECT phoneNumber FROM phoneNumber WHERE `enable` = 1");
+    stmt.all().forEach(async(item)=>{
+        const phoneNumber = item.phoneNumber;
+        // alert...
+        logger.warn(`send alert SMS ${JSON.stringify(value)} TO USER:${phoneNumber}`);
+    })
+    
 });
 
 
