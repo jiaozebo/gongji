@@ -7,7 +7,7 @@ const logger = plug('logger');
 
 //http://127.0.0.1/express
 app.use(function(req, res, next){
-	debugger;
+	// debugger;
 	logger.setKey("111");
 	next();
 });

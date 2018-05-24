@@ -31,14 +31,14 @@ const alert_table = {
 "S0-E3-A2":[35,36,74,75,0],
 "S0-E4-A1":[18,19,27,28,0],
 "S0-E4-A2":[35,36,74,75,0],
-"S0-E5-A1":[18,19,27,28,0],
-// "S0-E5-A1":[28,29,17,18,0],
+// "S0-E5-A1":[18,19,27,28,0],
+"S0-E5-A1":[28,29,17,18,0],
 "S0-E5-A2":[35,36,74,75,0],
 "S0-E6-A1":[18,19,27,28,0],
 "S0-E6-A2":[35,36,74,75,0],
 "S0-E7-A1":[18,19,27,28,0],
-"S0-E7-A2":[35,36,74,75,0],
-// "S0-E7-A2":[35,36,74,75,1],
+// "S0-E7-A2":[35,36,74,75,0],
+"S0-E7-A2":[35,36,74,75,1],
 "S0-E8-A1":[18,19,27,28,0],
 "S0-E8-A2":[35,36,74,75,0],
 "S0-E9-A1":[18,19,27,28,0],
@@ -122,32 +122,33 @@ gjManager.on('data', async (data)=>{
             gjManager.emit("data_change", {key:value_key_pre, value:value.value, unit:name, puid:value.puid});
             //*  报警下限	恢复下限	恢复上限	报警上限    是否已报警.
             const realValue = parseFloat(value.value);
+            const isWendu = value_key_pre.endsWith("-A1");
             const alert_item = alert_table[value_key_pre];
             if (alert_item){
                 if (realValue >= alert_item[3]){    // 上限报警!
                     alert_item[4] = 2;
-                    gjManager.emit("alert", {type:"高于上限值", key:value_key_pre, value:realValue, alertValue:alert_item[3], recoverValue:alert_item[2]});
-                    logger.warn(`${value_key_pre}上限报警!!!.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]}`);
+                    gjManager.emit("alert", {type:"超出预警值报警", key:value_key_pre, key_type:isWendu?1:2, value:realValue, alertValue:alert_item[3], recoverValue:alert_item[2], puid:value.puid});
+                    logger.warn(`${value_key_pre}上限报警!!!.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]},PUID:${value.puid}`);
                 } else if (realValue <= alert_item[0]){ // 下限报警!
                     alert_item[4] = 1;
-                    gjManager.emit("alert", {type:"低于下限值", key:value_key_pre, value:realValue, alertValue:alert_item[0], recoverValue:alert_item[1]});
-                    logger.warn(`${value_key_pre}下限报警.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]}`);
+                    gjManager.emit("alert", {type:"低于预警值报警", key:value_key_pre, key_type:isWendu?1:2, value:realValue, alertValue:alert_item[0], recoverValue:alert_item[1], puid:value.puid});
+                    logger.warn(`${value_key_pre}下限报警.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]},PUID:${value.puid}`);
                 }
                 else if (alert_item[4] == 1){   // 看看下限报警是否恢复?
                     if (realValue >= alert_item[1]){    // 已恢复
-                        logger.warn(`${value_key_pre}下限报警已恢复.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]}`);
+                        logger.warn(`${value_key_pre}下限报警已恢复.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]},PUID:${value.puid}`);
                         alert_item[4] = 0;
                     }else{
-                        gjManager.emit("alert", {type:"下限报警未恢复", key:value_key_pre, value:realValue, alertValue:alert_item[0], recoverValue:alert_item[1]});
-                        logger.warn(`${value_key_pre}下限报警未恢复.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]}`);
+                        gjManager.emit("alert", {type:"低于预警值报警未恢复", key:value_key_pre,key_type:isWendu?1:2, value:realValue, alertValue:alert_item[0], recoverValue:alert_item[1], puid:value.puid});
+                        logger.warn(`${value_key_pre}下限报警未恢复.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]},PUID:${value.puid}`);
                     }
                 }else if (alert_item[4] == 2){
                     if (realValue <= alert_item[2]){    // 已恢复
-                        logger.warn(`${value_key_pre}上限报警已恢复.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]}`);
+                        logger.warn(`${value_key_pre}上限报警已恢复.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]},PUID:${value.puid}`);
                         alert_item[4] = 0;
                     }else{
-                        gjManager.emit("alert", {type:"上限报警未恢复", key:value_key_pre, value:realValue, alertValue:alert_item[3], recoverValue:alert_item[2]});
-                        logger.warn(`${value_key_pre}上限报警未恢复!!!.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]}`);
+                        gjManager.emit("alert", {type:"超出预警值报警未恢复", key:value_key_pre, key_type:isWendu?1:2, value:realValue, alertValue:alert_item[3], recoverValue:alert_item[2], puid:value.puid});
+                        logger.warn(`${value_key_pre}上限报警未恢复!!!.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]},PUID:${value.puid}`);
                     }
                 }
             }
