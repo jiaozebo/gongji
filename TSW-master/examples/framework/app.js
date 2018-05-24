@@ -18,7 +18,7 @@ if (!fs.existsSync(root)) {
 }
 let logger = null;
 if (process.env.NODE_ENV == 'development'){ logger = plug('logger');}else{ logger = plug('logger');}
-logger.setKey("app");
+// logger.setKey("app");
 /**
  *  报警下限	恢复下限	恢复上限	报警上限    是否已报警.
  */
@@ -158,6 +158,7 @@ gjManager.on('data', async (data)=>{
 
 
 // test
+// if (false)
 setTimeout(async () => {
     let buffer = Buffer.alloc(0);
     const arr = ['315','347','362','378','386','390','394','405','425','315','347','362','378','386','390','394','405','425','315','347','362','378','386','390','394','405','425'];
@@ -201,6 +202,7 @@ gjManager.on('data_change', async (value)=>{
 
 
 gjManager.on('alert', async (value)=>{
+    value.alert = 1;
 	clients.forEach(async (ws)=>{
 		ws.send(JSON.stringify(value));
 	});

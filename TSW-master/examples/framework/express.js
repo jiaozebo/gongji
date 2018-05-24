@@ -6,7 +6,8 @@ const logger = plug('logger');
 
 
 //http://127.0.0.1/express
-app.all('/',function(req, res, next){
+app.use(function(req, res, next){
+	debugger;
 	logger.setKey("111");
 	next();
 });

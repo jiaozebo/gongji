@@ -12,7 +12,7 @@ if (!fs.existsSync(root)) {
     fs.mkdir(root, function () { });
 }
 if (process.env.NODE_ENV == 'development'){var logger = plug('logger');}else{var logger = plug('logger');}
-logger.setKey("gj");
+// logger.setKey("gj");
 const EventEmitter = require('events');
 
 
