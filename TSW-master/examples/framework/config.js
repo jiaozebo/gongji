@@ -26,3 +26,5 @@ this.appkey  = 'fBMs4HK5kjR4DPEQHSAZKBYY';
 this.afterStartup = ()=>{
     this.gjManager = require('./app');
 }
+
+this.runAtThisCpu=[0]
