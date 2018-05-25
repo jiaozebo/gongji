@@ -23,4 +23,6 @@ this.appkey  = 'fBMs4HK5kjR4DPEQHSAZKBYY';
 
 //https://tsw365.tswjs.org/log/view/xxx
 
-this.gjManager = require('./app');
+this.afterStartup = ()=>{
+    this.gjManager = require('./app');
+}

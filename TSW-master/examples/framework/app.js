@@ -62,7 +62,7 @@ const alert_table = {
 const IP = "192.168.111.200";
 const PORT = 7000;
 const gjManager = new GJManager(IP, PORT);
-const name_map = {};
+
 
 /*
 (async ()=>{
@@ -80,79 +80,64 @@ const name_map = {};
 
 
 
+const stmt = db.prepare('SELECT * FROM key2puid');
+const rows = stmt.all();
+
 gjManager.on('data', async (data)=>{
-    let units = data.body.units;
     
-    const stmt = db.prepare('SELECT * FROM key2puid');
-    const rows = stmt.all();
     var stmtInsert = db.prepare('INSERT INTO key2value VALUES(?,?,?)');
-    const value_map = [];
+    let units = data.body.units;
+    // 过滤.
+    for (let unit of units){
+        if (unit.key.endsWith('-VA')){
+            let key = unit.key.substring(0, unit.key.lastIndexOf('-VA'));
+            if (alert_table[key]){  // 有价值的,插入数据库.
+                let time = moment().format("YYYY-MM-DD HH:MM:SS");
+                stmtInsert.run(key, unit.value, time);
+                logger.debug(`recv valuable data.KEY: ${key} VALUE: ${unit.value}`);
 
-    for (var row of rows) {
-        // if (row.key === desiredData) {
-        //     console.log('found it!');
-        //     break;
-        // }
+                let puid = null
+                // emit 
+                for(let k2p of rows){
+                    if (k2p.key == key){
+                        puid = puid || k2p.puid;
+                        gjManager.emit("data_change", {key:key, value:unit.value, puid:k2p.puid});
+                    }
+                }
 
-        let value = units.find((unit)=>{
-            return unit.key.indexOf(row.key) != -1;
-        })
-        if (value){
-            value.puid = row.puid;
-            stmtInsert.run(value.key, value.value, moment().format("YYYY-MM-DD HH:MM:SS"));
-            // key_value[k] = value.value;
-            logger.debug(`KEY: ${value.key} VALUE: ${value.value}`);
-            // 
-
-            if (value.key.endsWith('-NA')){ // name
-                name_map[value.key.substring(0, value.key.lastIndexOf('-NA'))] = value.value;
-            }
-            else if (value.key.endsWith('-VA')){
-                value_map.push(value);
-            }
-        }
-    }
-    for (let value of value_map){
-        let value_key_pre = value.key.substring(0, value.key.lastIndexOf('-VA'));
-
-        let name = name_map[value_key_pre];
-        if (name){
-            // {"key":"S0-E11-A2","value":"50","unit":"湿度（RH％）","puid":"201000000000000010#d413755"}
-
-            gjManager.emit("data_change", {key:value_key_pre, value:value.value, unit:name, puid:value.puid});
-            //*  报警下限	恢复下限	恢复上限	报警上限    是否已报警.
-            const realValue = parseFloat(value.value);
-            const isWendu = value_key_pre.endsWith("-A1");
-            const alert_item = alert_table[value_key_pre];
-            
+                //*  报警下限	恢复下限	恢复上限	报警上限    是否已报警.
+            const realValue = parseFloat(unit.value);
+            const isWendu = key.endsWith("-A1");
+            const alert_item = alert_table[key];            
             if (alert_item){
 
                 if (realValue >= alert_item[3]){    // 上限报警!
                     alert_item[4] = 2;
-                    gjManager.emit("alert", {type:"超出预警值报警", key:value_key_pre, key_type:isWendu?1:2, value:realValue, alertValue:alert_item[3], recoverValue:alert_item[2], puid:value.puid});
-                    logger.warn(`${value_key_pre}上限报警!!!.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]},PUID:${value.puid}`);
+                    gjManager.emit("alert", {type:"超出预警值报警", key:key, key_type:isWendu?1:2, value:realValue, alertValue:alert_item[3], recoverValue:alert_item[2], puid:puid});
+                    logger.warn(`${key}上限报警!!!.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]},PUID:${puid}`);
                 } else if (realValue <= alert_item[0]){ // 下限报警!
                     alert_item[4] = 1;
-                    gjManager.emit("alert", {type:"低于预警值报警", key:value_key_pre, key_type:isWendu?1:2, value:realValue, alertValue:alert_item[0], recoverValue:alert_item[1], puid:value.puid});
-                    logger.warn(`${value_key_pre}下限报警.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]},PUID:${value.puid}`);
+                    gjManager.emit("alert", {type:"低于预警值报警", key:key, key_type:isWendu?1:2, value:realValue, alertValue:alert_item[0], recoverValue:alert_item[1], puid:puid});
+                    logger.warn(`${key}下限报警.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]},PUID:${puid}`);
                 }
                 else if (alert_item[4] == 1){   // 看看下限报警是否恢复?
                     if (realValue >= alert_item[1]){    // 已恢复
-                        logger.warn(`${value_key_pre}下限报警已恢复.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]},PUID:${value.puid}`);
+                        logger.warn(`${key}下限报警已恢复.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]},PUID:${puid}`);
                         alert_item[4] = 0;
                     }else{
-                        gjManager.emit("alert", {type:"低于预警值报警未恢复", key:value_key_pre,key_type:isWendu?1:2, value:realValue, alertValue:alert_item[0], recoverValue:alert_item[1], puid:value.puid});
-                        logger.warn(`${value_key_pre}下限报警未恢复.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]},PUID:${value.puid}`);
+                        gjManager.emit("alert", {type:"低于预警值报警未恢复", key:key,key_type:isWendu?1:2, value:realValue, alertValue:alert_item[0], recoverValue:alert_item[1], puid:puid});
+                        logger.warn(`${key}下限报警未恢复.值:${realValue},报警值:${alert_item[0]},恢复值:${alert_item[1]},PUID:${puid}`);
                     }
                 }else if (alert_item[4] == 2){
                     if (realValue <= alert_item[2]){    // 已恢复
-                        logger.warn(`${value_key_pre}上限报警已恢复.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]},PUID:${value.puid}`);
+                        logger.warn(`${key}上限报警已恢复.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]},PUID:${puid}`);
                         alert_item[4] = 0;
                     }else{
-                        gjManager.emit("alert", {type:"超出预警值报警未恢复", key:value_key_pre, key_type:isWendu?1:2, value:realValue, alertValue:alert_item[3], recoverValue:alert_item[2], puid:value.puid});
-                        logger.warn(`${value_key_pre}上限报警未恢复!!!.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]},PUID:${value.puid}`);
+                        gjManager.emit("alert", {type:"超出预警值报警未恢复", key:key, key_type:isWendu?1:2, value:realValue, alertValue:alert_item[3], recoverValue:alert_item[2], puid:puid});
+                        logger.warn(`${key}上限报警未恢复!!!.值:${realValue},报警值:${alert_item[3]},恢复值:${alert_item[2]},PUID:${puid}`);
                     }
                 }
+            }
             }
         }
     }
@@ -198,6 +183,7 @@ setTimeout(async () => {
 
 
 gjManager.on('data_change', async (value)=>{
+    logger.info(`on data_change value:${JSON.stringify(value)}`)
 	clients.forEach(async (ws)=>{
 		ws.send(JSON.stringify(value));
 	});
@@ -211,12 +197,12 @@ gjManager.on('alert', async (value)=>{
     });
     
     // sms alert...
-    const stmt = db.prepare("SELECT phoneNumber FROM phoneNumber WHERE `enable` = 1");
-    stmt.all().forEach(async(item)=>{
-        const phoneNumber = item.phoneNumber;
-        // alert...
-        logger.warn(`send alert SMS ${JSON.stringify(value)} TO USER:${phoneNumber}`);
-    })
+    // const stmt = db.prepare("SELECT phoneNumber FROM phoneNumber WHERE `enable` = 1");
+    // stmt.all().forEach(async(item)=>{
+    //     const phoneNumber = item.phoneNumber;
+    //     // alert...
+    //     logger.warn(`send alert SMS ${JSON.stringify(value)} TO USER:${phoneNumber}`);
+    // })
     
 });
 

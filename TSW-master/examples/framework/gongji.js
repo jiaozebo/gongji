@@ -51,9 +51,9 @@ class GJUnit{
         this.key = iconv.decode(content.slice(0, firstDivider), 'gbk');
         this.value = iconv.decode(content.slice(firstDivider + 1), 'gbk');
 
-        if (this.value.indexOf("报警") != -1){
-            logger.warn(`有报警可能....${this.key}:${this.value}`);
-        }
+        // if (this.value.indexOf("报警") != -1){
+        //     logger.warn(`有报警可能....${this.key}:${this.value}`);
+        // }
         // this.key = content.toString("gbk", 0, firstDivider);
         // this.value = content.toString("gbk", firstDivider + 1);
         
